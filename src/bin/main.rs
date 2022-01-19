@@ -9,13 +9,15 @@ fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
     let pool = ThreadPool::new(4);
 
-    for stream in listener.incoming() {
+    for stream in listener.incoming().take(2) {
         let stream = stream.unwrap();
         
         pool.execute(|| {
             hande_connection(stream);
         });
     }
+
+    println!("Shutting down.");
 }
 
 fn hande_connection(mut stream: TcpStream) {
@@ -29,7 +31,7 @@ fn hande_connection(mut stream: TcpStream) {
     let (status_line, filename) = if buffer.starts_with(get) {
         ("HTTP/1.1 200 OK", "template/hello.html")
     } else if buffer.starts_with(sleep) { 
-        thread::sleep(Duration::from_secs(5));
+        thread::sleep(Duration::from_secs(15));
         ("HTTP/1.1 200 OK", "template/hello.html")
     } else {
         ("HTTP/1.1 404 NOT FOUND", "template/404.html")
