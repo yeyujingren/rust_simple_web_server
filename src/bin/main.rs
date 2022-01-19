@@ -3,14 +3,18 @@ use std::io::prelude::*;
 use std::fs;
 use std::time::Duration;
 use std::thread;
+use web_server::ThreadPool;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        hande_connection(stream);
-        println!("Connection established!");
+        
+        pool.execute(|| {
+            hande_connection(stream);
+        });
     }
 }
 
@@ -43,5 +47,5 @@ fn hande_connection(mut stream: TcpStream) {
     stream.write(response.as_bytes()).unwrap();
     stream.flush().unwrap();
 
-    println!("Result: {}", String::from_utf8_lossy(&buffer[..]));
+    // println!("Result: {}", String::from_utf8_lossy(&buffer[..]));
 }
